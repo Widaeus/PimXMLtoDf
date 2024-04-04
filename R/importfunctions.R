@@ -3,12 +3,21 @@
 #' @description *Applicable to microvasc research group, Danderyds Sjukhus workflow*. Takes a PimSOFT report in XML format and generates a single row of variables suited for implementation into a data frame. It is suited for reports generated with "Recording info" and "Mean perfusion" boxes ticked.
 #'
 #' @param xml_file_path file path to xml file in working directory
+#' @param recordinginfo is not used at the moment
+#' @param calculations is not used at the moment
+#' @param meanperfusion is not used at the moment
+#' @param changeperROI is not used at the moment
+#'
 #' @import tidyverse
 #' @import xml2
 #' @return Returns a single row tibble dataframe.
 #' @export
 #'
-xml_to_singlerow <- function(xml_file_path) {
+xml_to_singlerow <- function(xml_file_path,
+                             recordinginfo = FALSE,
+                             calculations = FALSE,
+                             meanperfusion = FALSE,
+                             changeperROI = FALSE) {
   # Define the namespace to handle prefixed tags
   ns <- c(ss = "urn:schemas-microsoft-com:office:spreadsheet")
 
@@ -125,12 +134,21 @@ xml_to_singlerow <- function(xml_file_path) {
 #' @description *Applicable to microvasc research group, Danderyds Sjukhus workflow*. Takes a *FOLDER* of PimSOFT report in XML format and generates a single row of variables suited for implementation into a data frame. It is suited for reports generated with "Recording info" and "Mean perfusion" boxes ticked.
 #'
 #' @param xml_folder_file_path file path to folder that needs to be compiled.
+#' @param recordinginfo is not used at the moment
+#' @param calculations is not used at the moment
+#' @param meanperfusion is not used at the moment
+#' @param changeperROI is not used at the moment
+#'
 #' @import tidyverse
 #' @import xml2
 #' @return Returns a tibble dataframe.
 #' @export
 #'
-singlerow_df_compile <- function(xml_folder_file_path) {
+singlerow_df_compile <- function(xml_folder_file_path,
+                                 recordinginfo = FALSE,
+                                 calculations = FALSE,
+                                 meanperfusion = FALSE,
+                                 changeperROI = FALSE) {
   # List all XML files in the target directory
   files <- list.files(path = xml_folder_file_path, pattern = "\\.xml$", full.names = TRUE)
 

@@ -4,10 +4,24 @@
 \alias{singlerow_df_compile}
 \title{singlerow_df_compile}
 \usage{
-singlerow_df_compile(xml_folder_file_path)
+singlerow_df_compile(
+  xml_folder_file_path,
+  recordinginfo = FALSE,
+  calculations = FALSE,
+  meanperfusion = FALSE,
+  changeperROI = FALSE
+)
 }
 \arguments{
 \item{xml_folder_file_path}{file path to folder that needs to be compiled.}
+
+\item{recordinginfo}{is not used at the moment}
+
+\item{calculations}{is not used at the moment}
+
+\item{meanperfusion}{is not used at the moment}
+
+\item{changeperROI}{is not used at the moment}
 }
 \value{
 Returns a tibble dataframe.

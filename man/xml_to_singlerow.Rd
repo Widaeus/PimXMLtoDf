@@ -4,10 +4,24 @@
 \alias{xml_to_singlerow}
 \title{xml_to_singlerow}
 \usage{
-xml_to_singlerow(xml_file_path)
+xml_to_singlerow(
+  xml_file_path,
+  recordinginfo = FALSE,
+  calculations = FALSE,
+  meanperfusion = FALSE,
+  changeperROI = FALSE
+)
 }
 \arguments{
 \item{xml_file_path}{file path to xml file in working directory}
+
+\item{recordinginfo}{is not used at the moment}
+
+\item{calculations}{is not used at the moment}
+
+\item{meanperfusion}{is not used at the moment}
+
+\item{changeperROI}{is not used at the moment}
 }
 \value{
 Returns a single row tibble dataframe.
