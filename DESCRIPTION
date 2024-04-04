@@ -15,6 +15,8 @@ Description: This package is intended for importing multiple XML files as single
 Encoding: UTF-8
 LazyData: true
 Imports:
-    tidyverse,
-    xml2
-RoxygenNote: 7.2.3
+  tidyverse,
+  xml2
+License: MIT + file LICENSE
+Maintainer: [Jacob Widaeus] <jacob@widaeus.com>
+RoxygenNote: 7.3.1

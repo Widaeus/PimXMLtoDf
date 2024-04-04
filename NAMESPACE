@@ -2,3 +2,5 @@
 
 export(singlerow_df_compile)
 export(xml_to_singlerow)
+import(tidyverse)
+import(xml2)

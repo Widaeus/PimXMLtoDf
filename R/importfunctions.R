@@ -1,11 +1,11 @@
-#' xml_to_singlerow
-#'
-#' @description
-#' *Applicable to microvasc research group, Danderyds Sjukhus workflow*. Takes a PimSOFT report in XML format and generates a single row of variables suited for implementation into a data frame. It is suited for reports generated with "Recording info" and "Mean perfusion" boxes ticked.
+#'xml_to_singlerow
+#' @import tidyverse
+#' @import xml2
+#' @description *Applicable to microvasc research group, Danderyds Sjukhus workflow*. Takes a PimSOFT report in XML format and generates a single row of variables suited for implementation into a data frame. It is suited for reports generated with "Recording info" and "Mean perfusion" boxes ticked.
 #'
 #' @param xml_file_path file path to xml file in working directory
 #'
-#' @return returns
+#' @return Returns a single row tibble dataframe.
 #' @export
 #'
 xml_to_singlerow <- function(xml_file_path) {
@@ -120,15 +120,14 @@ xml_to_singlerow <- function(xml_file_path) {
 }
 
 
-
 #' singlerow_df_compile
-#'
-#'#' @description
-#' *Applicable to microvasc research group, Danderyds Sjukhus workflow*. Takes a *FOLDER* of PimSOFT report in XML format and generates a single row of variables suited for implementation into a data frame. It is suited for reports generated with "Recording info" and "Mean perfusion" boxes ticked.
+#' @import tidyverse
+#' @import xml2
+#' @description *Applicable to microvasc research group, Danderyds Sjukhus workflow*. Takes a *FOLDER* of PimSOFT report in XML format and generates a single row of variables suited for implementation into a data frame. It is suited for reports generated with "Recording info" and "Mean perfusion" boxes ticked.
 #'
 #' @param xml_folder_file_path file path to folder that needs to be compiled.
 #'
-#' @return returns
+#' @return Returns a tibble dataframe.
 #' @export
 #'
 singlerow_df_compile <- function(xml_folder_file_path) {
