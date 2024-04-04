@@ -13,7 +13,7 @@ singlerow_df_compile <- function(xml_folder_file_path) {
   files <- list.files(path = xml_folder_file_path, pattern = "\\.xml$", full.names = TRUE)
 
   # Apply your function to each file and combine the results
-  compiled_df <- map_dfr(files, process_xml_to_df)
+  compiled_df <- map_dfr(files, xml_to_singlerow)
 
   return(compiled_df)
 }
