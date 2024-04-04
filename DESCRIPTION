@@ -16,5 +16,5 @@ Encoding: UTF-8
 LazyData: true
 Imports:
     tidyverse,
-    xml2,
+    xml2
 RoxygenNote: 7.2.3
