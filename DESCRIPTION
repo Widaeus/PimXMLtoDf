@@ -1,7 +1,7 @@
 Package: PimXMLtoDf
 Type: Package
 Title: Conversion of PimSOFT generated XML files to usable R dataframe
-Version: 0.1.0
+Version: 0.1.1
 Author: person(
   "Jacob", "Widaeus",
   email = "jacob.widaeus@gmail.com",
