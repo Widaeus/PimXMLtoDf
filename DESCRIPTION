@@ -17,5 +17,4 @@ LazyData: true
 Imports:
     tidyverse,
     xml2,
-    lubridate
 RoxygenNote: 7.2.3
