@@ -1,13 +1,13 @@
 
-#' xml_to_singlerow
+#' xml_to_df
 #'
 #' @description
 #' *Applicable to microvasc research group, Danderyds Sjukhus workflow*. Takes a PimSOFT report in XML format and generates a single row of variables suited for implementation into a data frame. It is suited for reports generated with "Recording info" and "Mean perfusion" boxes ticked.
 #'
-#'
 #' @param xml_file_path file path to xml file in working directory
+#' @param xml_folder_file_path file path to folder with xml files in working directory
 #'
-#' @return returns a single row of variables of xml file
+#' @return returns
 #' @export
 #'
 xml_to_singlerow <- function(xml_file_path) {
@@ -119,4 +119,14 @@ xml_to_singlerow <- function(xml_file_path) {
 
   # Return the new data frame
   return(data)
+}
+
+singlerow_df_compile <- function(xml_folder_file_path) {
+  # List all XML files in the target directory
+  files <- list.files(path = xml_folder_file_path, pattern = "\\.xml$", full.names = TRUE)
+
+  # Apply your function to each file and combine the results
+  compiled_df <- map_dfr(files, xml_to_singlerow)
+
+  return(compiled_df)
 }
