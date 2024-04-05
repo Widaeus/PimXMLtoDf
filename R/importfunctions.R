@@ -8,7 +8,12 @@
 #' @param meanperfusion is not used at the moment
 #' @param changeperROI is not used at the moment
 #'
-#' @import tidyverse
+#' @import dplyr
+#' @import tidyr
+#' @import purrr
+#' @import stringr
+#' @import tibble
+#' @import lubridate
 #' @import xml2
 #' @return Returns a single row tibble dataframe.
 #' @export
@@ -139,8 +144,7 @@ xml_to_singlerow <- function(xml_file_path,
 #' @param meanperfusion is not used at the moment
 #' @param changeperROI is not used at the moment
 #'
-#' @import tidyverse
-#' @import xml2
+#' @import purrr
 #' @return Returns a tibble dataframe.
 #' @export
 #'

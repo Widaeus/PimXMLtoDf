@@ -14,9 +14,16 @@ Description: This package is intended for importing multiple XML files as single
         "xml_to_singlerow" takes a xml file path and generates a single row tibble df. "singlerow_df_compile" takes a file path to a folder of XML files and compiles all of them into a data frame.
 Encoding: UTF-8
 LazyData: true
-Imports:
-  tidyverse,
+Depends:
+  dplyr,
+  tidyr,
+  purrr,
+  stringr,
+  tibble,
+  lubridate,
   xml2
+Suggests: testthat (>= 3.0.0)
+Config/testthat/edition: 3
 License: MIT + file LICENSE
 Maintainer: [Jacob Widaeus] <jacob@widaeus.com>
 RoxygenNote: 7.3.1
