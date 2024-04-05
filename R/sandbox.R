@@ -56,7 +56,6 @@ if (identical(meanperfusion, TRUE) &
     filter(!if_any(everything(), ~grepl("Percent Change Per ROI", .x)))
 }
 
-
 # Extract the column as a vector
 original_data <- filtered_data$cell_data
 
