@@ -9,10 +9,10 @@ meanperf_recinfo <- "sandbox/CV01_dag1_meanperf_recinfo.xml"
 meanperf_recinfo_calculations <- "sandbox/CV01_dag1_meanperf_recinfo_calculations.xml"
 meanperf_recinfo_calculations_percentchangeroi <- "sandbox/CV01_dag1_meanperf_recinfo_calculations_percentchangeroi.xml"
 # Enter perameters #
-recordinginfo = FALSE
-calculations = FALSE
-meanperfusion = FALSE
-changeperROI = FALSE
+recordinginfo = TRUE
+calculations = TRUE
+meanperfusion = TRUE
+changeperROI = TRUE
 
 
 #######evaluating code
@@ -35,8 +35,45 @@ data <- map_df(rows, ~{
 data <- data %>%
   filter(!if_any(everything(), ~ .x == ""))
 
+# Split up data to make it generic
+# Split for rec info
+start_row_rec <- which(data$cell_data == "Recording info")
+end_row_rec <- (which(data$cell_data == "Image Count") + 3)
+recinfodata <- data[start_row:end_row,]
+# Split for mean perfusion data
+start_row_perf <- which(data$cell_data == "Mean Perfusion")
+end_row_perf <- (which(data$cell_data == "Mean Perfusion") + 65)
+meanperfdata <- data[start_row_perf:end_row_perf,]
+# Split for calculation data
+start_row_calc <- which(data$cell_data == "Calculations")
+end_row_calc <- (which(data$cell_data == "Calculations") + 305)
+calcdata <- data[start_row_calc:end_row_calc,]
+# Split for percent change data
+start_row_perc <- which(data$cell_data == "Percent Change Per ROI")
+end_row_perc <- (which(data$cell_data == "Percent Change Per ROI") + 65)
+percentchangedata <- data[start_row_perc:end_row_perc,]
 
-# Cleaningprocess based on XML output### in progress
+
+# Counting how many rows in meanperfdata has letters (variables)
+# Initialize a counter
+count_rows_with_letters <- 0
+
+# Loop through each row of the dataframe
+for (i in 1:nrow(meanperfdata)) {
+  # Check if the current row contains any letter
+  if (grepl("[a-zA-Z]", meanperfdata[i, 1])) {
+    # Increment the counter if a letter is found
+    count_rows_with_letters <- count_rows_with_letters + 1
+  }
+}
+# Meanperfdata has 6 locked letters in its data structure. Every letter above 6 signifies a new variable.
+# If you take above number, subtract 6 and add 1 -> you get the number of columns in data frame.
+# If i want to subset the meanperfdata (split) then i take the number of columns in the dataframe, + 2. This is starting number.
+# Then take column number and multitply by 4. Add this to starting number and add another 3.
+# WORKS.
+
+
+# Specific cleaning ####### Invalid
 if (identical(meanperfusion, TRUE) &
     identical(recordinginfo | calculations | changeperROI, FALSE)) {
   data <- data[-1, ]
@@ -54,8 +91,26 @@ if (identical(meanperfusion, TRUE) &
 } else if (identical(meanperfusion & recordinginfo & calculations & changeperROI, TRUE)) {
   data <- data %>%
     filter(!if_any(everything(), ~grepl("Percent Change Per ROI", .x)))
+  data <- data %>%
+    filter(!if_any(everything(), ~grepl("Mean Perfusion", .x)))
+  data <- data[-c(1:2, 4:6, 8:14), ]
 }
 
-# Extract the column as a vector
-original_data <- filtered_data$cell_data
+
+# Extract the columns as a vectors
+vec_recinfodata <- recinfodata$cell_data
+vec_meanperfdata <- meanperfdata$cell_data
+vec_calcdata <- calcdata$cell_data
+vec_percentchangedata <- percentchangedata$cell_data
+
+num_rows_recinfo <- 1
+num_rows_meanperfdata <- 5
+num_rows_percentchangedata <- 5
+
+# Calculate the number of rows the new data frame will have
+num_rows <- length(original_data_clean) / (sum(grepl("[a-zA-Z]", original_data_clean)))
+
+# Convert the vector into a matrix with the specified number of columns, filling by row, convert back to tibble.
+matrix_data <- matrix(vec_meanperfdata, nrow = num_rows_meanperfdata, byrow = TRUE)
+data <- as_tibble(matrix_data)
 
