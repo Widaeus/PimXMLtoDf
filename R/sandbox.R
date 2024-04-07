@@ -36,28 +36,57 @@ data <- data %>%
   filter(!if_any(everything(), ~ .x == ""))
 
 # Split up data to make it generic
+
 # Split for rec info
 start_row_rec <- which(data$cell_data == "Recording info")
 end_row_rec <- (which(data$cell_data == "Image Count") + 3)
-recinfodata <- data[start_row:end_row,]
-# Split for mean perfusion data
-start_row_perf <- which(data$cell_data == "Mean Perfusion")
-end_row_perf <- (which(data$cell_data == "Mean Perfusion") + 65)
-meanperfdata <- data[start_row_perf:end_row_perf,]
+recinfodata <- data[start_row_rec:end_row_rec,]
+
 # Split for calculation data
-start_row_calc <- which(data$cell_data == "Calculations")
-end_row_calc <- (which(data$cell_data == "Calculations") + 305)
-calcdata <- data[start_row_calc:end_row_calc,]
-# Split for percent change data
-start_row_perc <- which(data$cell_data == "Percent Change Per ROI")
-end_row_perc <- (which(data$cell_data == "Percent Change Per ROI") + 65)
-percentchangedata <- data[start_row_perc:end_row_perc,]
+if (identical(meanperfusion & recordinginfo & calculations & changeperROI, TRUE)) {
+  start_row_perf <- which(data$cell_data == "Calculations")
+  end_row_perf <- (which(data$cell_data == "Mean Perfusion") - 1)
+  calcdata <- data[start_row_perf:end_row_perf,]
+} else if (identical(meanperfusion & recordinginfo & calculations, TRUE) &
+           identical(changeperROI, FALSE)) {
+  start_row_perf <- which(data$cell_data == "Mean Perfusion")
+  end_row_perf <- (which(data$cell_data == "Mean Perfusion") - 1)
+  calcdata <- data[start_row_perf:end_row_perf,]
+}
+
+# Split for mean perfusion data
+if (identical(meanperfusion & recordinginfo & calculations & changeperROI, TRUE)) {
+start_row_perf <- which(data$cell_data == "Mean Perfusion")
+end_row_perf <- (which(data$cell_data == "Percent Change Per ROI") - 1)
+meanperfdata <- data[start_row_perf:end_row_perf,]
+} else if (identical(meanperfusion & recordinginfo & calculations, TRUE) &
+           identical(changeperROI, FALSE)) {
+  start_row_perf <- which(data$cell_data == "Mean Perfusion")
+  end_row_perf <- nrow(data)
+  meanperfdata <- data[start_row_perf:end_row_perf,]
+} else if (identical(meanperfusion & recordinginfo, TRUE) &
+           identical(calculations | changeperROI, FALSE)) {
+  start_row_perf <- which(data$cell_data == "Mean Perfusion")
+  end_row_perf <- nrow(data)
+  meanperfdata <- data[start_row_perf:end_row_perf,]
+} else if (identical(meanperfusion, TRUE) &
+           identical(recordinginfo | calculations | changeperROI, FALSE)) {
+  start_row_perf <- which(data$cell_data == "Mean Perfusion")
+  end_row_perf <- nrow(data)
+  meanperfdata <- data[start_row_perf:end_row_perf,]
+}
+
+#Split for ROI data
+if (identical(changeperROI, TRUE)) {
+  start_row_perf <- which(data$cell_data == "Percent Change Per ROI")
+  end_row_perf <- nrow(data)
+  roidata <- data[start_row_perf:end_row_perf,]
+}
 
 
 # Counting how many rows in meanperfdata has letters (variables)
 # Initialize a counter
 count_rows_with_letters <- 0
-
 # Loop through each row of the dataframe
 for (i in 1:nrow(meanperfdata)) {
   # Check if the current row contains any letter
@@ -66,6 +95,7 @@ for (i in 1:nrow(meanperfdata)) {
     count_rows_with_letters <- count_rows_with_letters + 1
   }
 }
+
 # Meanperfdata has 6 locked letters in its data structure. Every letter above 6 signifies a new variable.
 # If you take above number, subtract 6 and add 1 -> you get the number of columns in data frame.
 # If i want to subset the meanperfdata (split) then i take the number of columns in the dataframe, + 2. This is starting number.
