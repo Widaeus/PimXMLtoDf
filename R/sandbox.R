@@ -184,7 +184,7 @@ for (i in 1:num_var_calcdata) {
 ## Back to a list
 all_tibbles <- list(recinfo_data, calc_data, meanperf_data, roi_data)
 
-# Renaming
+# Renaming # Still does not work.
 for (i in 2:length(all_tibbles)) {
   all_tibbles[[i]] <- all_tibbles[[i]] %>%
     rename_with(.fn = ~str_replace_all(.x, "^(Vila|vila|Rest|rest)$", "rest"),
@@ -199,5 +199,25 @@ for (i in 2:length(all_tibbles)) {
   all_tibbles[[i]] <- mutate(all_tibbles[[i]][,1], str_replace(all_tibbles[[i]][,1], "REF|ref|Ref", "refsens"))
   all_tibbles[[i]] <- mutate(all_tibbles[[i]][,1], str_replace(all_tibbles[[i]][,1], "SNP", "SNPsens"))
 }
+
+
+for (i in 2:length(all_tibbles)) {
+  first_col_name <- names(all_tibbles[[i]])[1]  # Get the name of the first column
+
+  all_tibbles[[i]] <- all_tibbles[[i]] %>%
+    rename_with(.fn = ~str_replace_all(.x, "^(Vila|vila|Rest|rest)$", "rest"),
+                .cols = matches("^(Vila|vila|Rest|rest)$")) %>%
+    rename_with(.fn = ~ifelse(str_detect(., regex("AC|ac", ignore_case = TRUE)), "ACHmax", .),
+                .cols = everything()) %>%
+    rename_with(.fn = ~ifelse(str_detect(., regex("SN|sn", ignore_case = TRUE)), "SNPmax", .),
+                .cols = everything()) %>%
+    # Removing spaces from column names
+    rename_with(.fn = ~str_replace_all(.x, " ", ""), .cols = everything()) %>%
+    # Correctly apply text replacements within the first column
+    mutate(!!sym(first_col_name) := str_replace_all(!!sym(first_col_name), "ACH", "ACHsens")) %>%
+    mutate(!!sym(first_col_name) := str_replace_all(!!sym(first_col_name), "REF|ref|Ref", "refsens")) %>%
+    mutate(!!sym(first_col_name) := str_replace_all(!!sym(first_col_name), "SNP", "SNPsens"))
+}
+
 
 # Back to env.
