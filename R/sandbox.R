@@ -15,7 +15,6 @@ meanperfusion = TRUE
 changeperROI = TRUE
 
 
-#######evaluating code
 ns <- c(ss = "urn:schemas-microsoft-com:office:spreadsheet")
 
 # Read the XML file
@@ -83,64 +82,90 @@ if (identical(changeperROI, TRUE)) {
   roidata <- data[start_row_perf:end_row_perf,]
 }
 
+# Set number of rows tibble will have:
 
-# Counting how many rows in meanperfdata has letters (variables)
-# Initialize a counter
+# Counting how many rows calcdata has letters (variables)
 count_rows_with_letters <- 0
-# Loop through each row of the dataframe
-for (i in 1:nrow(meanperfdata)) {
+for (i in 1:nrow(calcdata)) {
   # Check if the current row contains any letter
-  if (grepl("[a-zA-Z]", meanperfdata[i, 1])) {
+  if (grepl("[a-zA-Z]", calcdata[i, 1])) {
     # Increment the counter if a letter is found
     count_rows_with_letters <- count_rows_with_letters + 1
   }
 }
+# Starting variables are 6, divide by 5 to get nr of variables in calcdata
+num_var_calcdata <- (count_rows_with_letters - 6) / 5
 
-# Meanperfdata has 6 locked letters in its data structure. Every letter above 6 signifies a new variable.
-# If you take above number, subtract 6 and add 1 -> you get the number of columns in data frame.
-# If i want to subset the meanperfdata (split) then i take the number of columns in the dataframe, + 2. This is starting number.
-# Then take column number and multitply by 4. Add this to starting number and add another 3.
-# WORKS.
+# Specific cleaning
+# Recording info
+recinfodata <- recinfodata[-c(1:2, 4:6, 8:13),]
+recinfodata$cell_data <- gsub(" ", "", recinfodata$cell_data)
 
-
-# Specific cleaning ####### Invalid
-if (identical(meanperfusion, TRUE) &
-    identical(recordinginfo | calculations | changeperROI, FALSE)) {
-  data <- data[-1, ]
-
-} else if (identical(meanperfusion & recordinginfo, TRUE) &
-           identical(calculations | changeperROI, FALSE)) {
-  data <- data[-c(1:2, 4:6, 8:14), ]
-
-} else if (identical(meanperfusion & recordinginfo & calculations, TRUE) &
-           identical(changeperROI, FALSE)) {
-  data <- data %>%
-    filter(!if_any(everything(), ~grepl("Mean Perfusion", .x)))
-  data <- data[-c(1:2, 4:6, 8:14), ]
-
-} else if (identical(meanperfusion & recordinginfo & calculations & changeperROI, TRUE)) {
-  data <- data %>%
-    filter(!if_any(everything(), ~grepl("Percent Change Per ROI", .x)))
-  data <- data %>%
-    filter(!if_any(everything(), ~grepl("Mean Perfusion", .x)))
-  data <- data[-c(1:2, 4:6, 8:14), ]
+# Calculations
+saved_calcdata_vars <- calcdata[c(1:6),]
+stripped_calcdata <- calcdata[-c(1:6),]
+# Function for variable position
+var_position <- function(n) {
+  return(1 + (n - 1) * 25)
 }
+# Save names of all variables in calcdata
+# Generate the row indices using var_position
+row_indices <- sapply(1:(num_var_calcdata), var_position)
+# Extract variable names
+var_calcdata <- data.frame(cell_data = stripped_calcdata[row_indices, "cell_data"])
+# Now remove all rows containing variable names
+stripped_calcdata <- stripped_calcdata[-c(row_indices),]
+# Recombine the saved variables
+calcdata <- rbind(saved_calcdata_vars, stripped_calcdata)
+# Calcuate number of rows, based on estimated number of columns; 6
+num_rows_calcdata <- nrow(calcdata) / 6
+# Remove spaces
+calcdata$cell_data <- gsub(" ", "", calcdata$cell_data)
 
+# Mean perfusion
+meanperfdata <- meanperfdata[-c(1),]
+meanperfdata$cell_data <- gsub(" ", "", meanperfdata$cell_data)
 
-# Extract the columns as a vectors
+# ROI data
+roidata <- roidata[-c(1),]
+roidata$cell_data <- gsub(" ", "", roidata$cell_data)
+
+# Extract the column as a vectors
 vec_recinfodata <- recinfodata$cell_data
-vec_meanperfdata <- meanperfdata$cell_data
 vec_calcdata <- calcdata$cell_data
-vec_percentchangedata <- percentchangedata$cell_data
+vec_meanperfdata <- meanperfdata$cell_data
+vec_percentchangedata <- roidata$cell_data
 
-num_rows_recinfo <- 1
-num_rows_meanperfdata <- 5
-num_rows_percentchangedata <- 5
-
-# Calculate the number of rows the new data frame will have
-num_rows <- length(original_data_clean) / (sum(grepl("[a-zA-Z]", original_data_clean)))
+# Define number of rows
+num_rows_meanperf <- 5
+num_rows_roidata <- 5
+num_rows_recinfo <- 2
 
 # Convert the vector into a matrix with the specified number of columns, filling by row, convert back to tibble.
-matrix_data <- matrix(vec_meanperfdata, nrow = num_rows_meanperfdata, byrow = TRUE)
-data <- as_tibble(matrix_data)
+all_vectors <- list(vec_recinfodata, vec_calcdata, vec_meanperfdata, vec_percentchangedata)
+all_num_rows <- list(num_rows_recinfo, num_rows_calcdata, num_rows_meanperf, num_rows_roidata)
+all_names <- c("recinfo_", "calc_", "meanperf_", "roi_")
+
+for (i in 1:length(all_vectors)) {
+  matrix_data <- matrix(all_vectors[[i]], nrow = all_num_rows[[i]], byrow = TRUE)
+  data <- as_tibble(matrix_data)
+  assign(paste0(all_names[i], "data"), data, envir = .GlobalEnv)
+}
+
+# More cleaning
+
+# Calcdata
+# Remove numbers and punctuations
+data$V1 <- gsub("[0-9]|[[:punct:]]", "", data$V1)
+# Make first row labels and then remove it.
+names(data) <- as.character(unlist(data[1, ]))
+data <- data[-1, ]
+
+# Prepend variables names in forloop
+for (i in 1:num_var_calcdata) {
+  start_index <- 1 + (i - 1) * 4
+  end_index <- i * 4
+  data$Calculations[start_index:end_index] <- paste(
+    var_calcdata$cell_data[i], data$Calculations[start_index:end_index], sep = "")
+}
 
