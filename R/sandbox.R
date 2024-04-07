@@ -4,16 +4,17 @@ library(xml2)
 library(devtools)
 library(PimXMLtoDf)
 
+# Examples
 meanperf <- "sandbox/CV01_dag1_meanperf.xml"
 meanperf_recinfo <- "sandbox/CV01_dag1_meanperf_recinfo.xml"
 meanperf_recinfo_calculations <- "sandbox/CV01_dag1_meanperf_recinfo_calculations.xml"
 meanperf_recinfo_calculations_percentchangeroi <- "sandbox/CV01_dag1_meanperf_recinfo_calculations_percentchangeroi.xml"
-# Enter perameters #
+
+# Function parameters
 recordinginfo = TRUE
 calculations = TRUE
 meanperfusion = TRUE
 changeperROI = TRUE
-
 
 ns <- c(ss = "urn:schemas-microsoft-com:office:spreadsheet")
 
@@ -35,7 +36,6 @@ data <- data %>%
   filter(!if_any(everything(), ~ .x == ""))
 
 # Split up data to make it generic
-
 # Split for rec info
 start_row_rec <- which(data$cell_data == "Recording info")
 end_row_rec <- (which(data$cell_data == "Image Count") + 3)
@@ -82,8 +82,6 @@ if (identical(changeperROI, TRUE)) {
   roidata <- data[start_row_perf:end_row_perf,]
 }
 
-# Set number of rows tibble will have:
-
 # Counting how many rows calcdata has letters (variables)
 count_rows_with_letters <- 0
 for (i in 1:nrow(calcdata)) {
@@ -108,7 +106,7 @@ stripped_calcdata <- calcdata[-c(1:6),]
 var_position <- function(n) {
   return(1 + (n - 1) * 25)
 }
-# Save names of all variables in calcdata
+
 # Generate the row indices using var_position
 row_indices <- sapply(1:(num_var_calcdata), var_position)
 # Extract variable names
@@ -117,8 +115,6 @@ var_calcdata <- data.frame(cell_data = stripped_calcdata[row_indices, "cell_data
 stripped_calcdata <- stripped_calcdata[-c(row_indices),]
 # Recombine the saved variables
 calcdata <- rbind(saved_calcdata_vars, stripped_calcdata)
-# Calcuate number of rows, based on estimated number of columns; 6
-num_rows_calcdata <- nrow(calcdata) / 6
 # Remove spaces
 calcdata$cell_data <- gsub(" ", "", calcdata$cell_data)
 
@@ -140,6 +136,7 @@ vec_percentchangedata <- roidata$cell_data
 num_rows_meanperf <- 5
 num_rows_roidata <- 5
 num_rows_recinfo <- 2
+num_rows_calcdata <- nrow(calcdata) / 6
 
 # Convert the vector into a matrix with the specified number of columns, filling by row, convert back to tibble.
 all_vectors <- list(vec_recinfodata, vec_calcdata, vec_meanperfdata, vec_percentchangedata)
@@ -152,20 +149,30 @@ for (i in 1:length(all_vectors)) {
   assign(paste0(all_names[i], "data"), data, envir = .GlobalEnv)
 }
 
+all_tibbles <- list(recinfo_data, calc_data, meanperf_data, roi_data)
+list_names <- c("recinfo_data", "calc_data", "meanperf_data", "roi_data")
+names(all_tibbles) <- list_names
+
 # More cleaning
+# Remove numbers and punctuations from calc, meanperf, roi first columns
+for (i in 2:length(all_tibbles)) {
+  all_tibbles[[i]][[1]] <- gsub("[0-9]|[[:punct:]]", "", as.character(all_tibbles[[i]][[1]]))
+}
 
-# Calcdata
-# Remove numbers and punctuations
-data$V1 <- gsub("[0-9]|[[:punct:]]", "", data$V1)
 # Make first row labels and then remove it.
-names(data) <- as.character(unlist(data[1, ]))
-data <- data[-1, ]
+for (i in 2:length(all_tibbles)) {
+  names(all_tibbles[[i]]) <- as.character(unlist(all_tibbles[[i]][1, ]))
+  all_tibbles[[i]] <- all_tibbles[[i]][-1, ]
+}
 
-# Prepend variables names in forloop
+# Back to environment
+list2env(all_tibbles, envir = .GlobalEnv)
+
+# Prepend variables names in calcdata
 for (i in 1:num_var_calcdata) {
   start_index <- 1 + (i - 1) * 4
   end_index <- i * 4
-  data$Calculations[start_index:end_index] <- paste(
-    var_calcdata$cell_data[i], data$Calculations[start_index:end_index], sep = "")
+  calc_data$Calculations[start_index:end_index] <- paste(
+    var_calcdata$cell_data[i], calc_data$Calculations[start_index:end_index], sep = "")
 }
 
