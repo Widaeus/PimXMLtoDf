@@ -1,10 +1,12 @@
-#' xml_to_split
+#' xml_to_tibbles
 #'
-#' @param xml_file_path
-#' @param recordinginfo
-#' @param calculations
-#' @param meanperfusion
-#' @param changeperROI
+#' @description *Applicable to microvasc research group, Danderyds Sjukhus workflow*. Takes a PimSOFT report in XML format and generates clean data frames in tibble format. One data frame per specified report category. Recinfo and meanperfusion are mandatory.
+#'
+#' @param xml_file_path file path to xml file in working directory
+#' @param recordinginfo If XML files contain recinfo
+#' @param calculations If XML files contain calculations
+#' @param meanperfusion If XML files contain mean perfusion data
+#' @param changeperROI If XML files contain ROI change data
 #'
 #' @import dplyr
 #' @import tidyr
@@ -14,13 +16,13 @@
 #' @import lubridate
 #' @import xml2
 #'
-#' @return
+#' @return returns clean tibbles of data for each specified report category.
 #' @export
 #'
-xml_to_split <- function(xml_file_path,
-                                  recordinginfo = FALSE,
+xml_to_tibbles <- function(xml_file_path,
+                                  recordinginfo = TRUE,
                                   calculations = FALSE,
-                                  meanperfusion = FALSE,
+                                  meanperfusion = TRUE,
                                   changeperROI = FALSE) {
   ns <- c(ss = "urn:schemas-microsoft-com:office:spreadsheet")
 
