@@ -179,28 +179,13 @@ for (i in 1:num_var_calcdata) {
     var_calcdata$cell_data[i], calc_data$Calculations[start_index:end_index], sep = "|")
 }
 
-############### Breakpoint
 ## Now more cleaning
 ## Back to a list
 all_tibbles <- list(recinfo_data, calc_data, meanperf_data, roi_data)
+list_names <- c("recinfo_data", "calc_data", "meanperf_data", "roi_data")
+names(all_tibbles) <- list_names
 
-# Renaming # Still does not work.
-for (i in 2:length(all_tibbles)) {
-  all_tibbles[[i]] <- all_tibbles[[i]] %>%
-    rename_with(.fn = ~str_replace_all(.x, "^(Vila|vila|Rest|rest)$", "rest"),
-                .cols = matches("^(Vila|vila|Rest|rest)$")) %>%
-    rename_with(.fn = ~ifelse(str_detect(., regex("AC|ac", ignore_case = TRUE)), "ACHmax", .),
-                .cols = everything()) %>%
-    rename_with(.fn = ~ifelse(str_detect(., regex("SN|sn", ignore_case = TRUE)), "SNPmax", .),
-                .cols = everything())
-  names(all_tibbles[[i]]) <- names(all_tibbles[[i]]) %>%
-    str_replace_all(" ", "")
-  all_tibbles[[i]] <- mutate(all_tibbles[[i]][,1], str_replace(all_tibbles[[i]][,1], "ACH", "ACHsens"))
-  all_tibbles[[i]] <- mutate(all_tibbles[[i]][,1], str_replace(all_tibbles[[i]][,1], "REF|ref|Ref", "refsens"))
-  all_tibbles[[i]] <- mutate(all_tibbles[[i]][,1], str_replace(all_tibbles[[i]][,1], "SNP", "SNPsens"))
-}
-
-
+# Renaming
 for (i in 2:length(all_tibbles)) {
   first_col_name <- names(all_tibbles[[i]])[1]  # Get the name of the first column
 
@@ -219,5 +204,3 @@ for (i in 2:length(all_tibbles)) {
     mutate(!!sym(first_col_name) := str_replace_all(!!sym(first_col_name), "SNP", "SNPsens"))
 }
 
-
-# Back to env.
