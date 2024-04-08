@@ -1,12 +1,8 @@
 #' xml_to_tibbles
 #'
-#' @description *Applicable to microvasc research group, Danderyds Sjukhus workflow*. Takes a PimSOFT report in XML format and generates clean data frames in tibble format. One data frame per specified report category. Recinfo and meanperfusion are mandatory.
+#' @description *Applicable to microvasc research group, Danderyds Sjukhus workflow*. Takes a PimSOFT report in XML format and generates clean data frames in tibble format. One data frame per specified report category. Recinfo, calc, meanperf, roi.
 #'
 #' @param xml_file_path file path to xml file in working directory
-#' @param recordinginfo If XML files contain recinfo
-#' @param calculations If XML files contain calculations
-#' @param meanperfusion If XML files contain mean perfusion data
-#' @param changeperROI If XML files contain ROI change data
 #'
 #' @import dplyr
 #' @import tidyr
@@ -19,11 +15,7 @@
 #' @return returns clean tibbles of data for each specified report category.
 #' @export
 #'
-xml_to_tibbles <- function(xml_file_path,
-                                  recordinginfo = TRUE,
-                                  calculations = FALSE,
-                                  meanperfusion = TRUE,
-                                  changeperROI = FALSE) {
+xml_to_tibbles <- function(xml_file_path) {
   ns <- c(ss = "urn:schemas-microsoft-com:office:spreadsheet")
 
   # Read the XML file
@@ -49,46 +41,21 @@ xml_to_tibbles <- function(xml_file_path,
   end_row_rec <- (which(data$cell_data == "Image Count") + 3)
   recinfodata <- data[start_row_rec:end_row_rec,]
 
+
   # Split for calculation data
-  if (identical(meanperfusion & recordinginfo & calculations & changeperROI, TRUE)) {
-    start_row_perf <- which(data$cell_data == "Calculations")
-    end_row_perf <- (which(data$cell_data == "Mean Perfusion") - 1)
-    calcdata <- data[start_row_perf:end_row_perf,]
-  } else if (identical(meanperfusion & recordinginfo & calculations, TRUE) &
-             identical(changeperROI, FALSE)) {
-    start_row_perf <- which(data$cell_data == "Mean Perfusion")
-    end_row_perf <- (which(data$cell_data == "Mean Perfusion") - 1)
-    calcdata <- data[start_row_perf:end_row_perf,]
-  }
+  start_row_perf <- which(data$cell_data == "Calculations")
+  end_row_perf <- (which(data$cell_data == "Mean Perfusion") - 1)
+  calcdata <- data[start_row_perf:end_row_perf,]
 
   # Split for mean perfusion data
-  if (identical(meanperfusion & recordinginfo & calculations & changeperROI, TRUE)) {
-    start_row_perf <- which(data$cell_data == "Mean Perfusion")
-    end_row_perf <- (which(data$cell_data == "Percent Change Per ROI") - 1)
-    meanperfdata <- data[start_row_perf:end_row_perf,]
-  } else if (identical(meanperfusion & recordinginfo & calculations, TRUE) &
-             identical(changeperROI, FALSE)) {
-    start_row_perf <- which(data$cell_data == "Mean Perfusion")
-    end_row_perf <- nrow(data)
-    meanperfdata <- data[start_row_perf:end_row_perf,]
-  } else if (identical(meanperfusion & recordinginfo, TRUE) &
-             identical(calculations | changeperROI, FALSE)) {
-    start_row_perf <- which(data$cell_data == "Mean Perfusion")
-    end_row_perf <- nrow(data)
-    meanperfdata <- data[start_row_perf:end_row_perf,]
-  } else if (identical(meanperfusion, TRUE) &
-             identical(recordinginfo | calculations | changeperROI, FALSE)) {
-    start_row_perf <- which(data$cell_data == "Mean Perfusion")
-    end_row_perf <- nrow(data)
-    meanperfdata <- data[start_row_perf:end_row_perf,]
-  }
+  start_row_perf <- which(data$cell_data == "Mean Perfusion")
+  end_row_perf <- (which(data$cell_data == "Percent Change Per ROI") - 1)
+  meanperfdata <- data[start_row_perf:end_row_perf,]
 
   #Split for ROI data
-  if (identical(changeperROI, TRUE)) {
-    start_row_perf <- which(data$cell_data == "Percent Change Per ROI")
-    end_row_perf <- nrow(data)
-    roidata <- data[start_row_perf:end_row_perf,]
-  }
+  start_row_perf <- which(data$cell_data == "Percent Change Per ROI")
+  end_row_perf <- nrow(data)
+  roidata <- data[start_row_perf:end_row_perf,]
 
   # Counting how many rows calcdata has letters (variables)
   count_rows_with_letters <- 0
@@ -106,6 +73,9 @@ xml_to_tibbles <- function(xml_file_path,
   # Recording info
   recinfodata <- recinfodata[-c(1:2, 4:6, 8:13),]
   recinfodata$cell_data <- gsub(" ", "", recinfodata$cell_data)
+  vec_recinfodata <- recinfodata$cell_data
+  num_rows_recinfo <- 2
+
 
   # Calculations
   saved_calcdata_vars <- calcdata[c(1:6),]
@@ -114,7 +84,6 @@ xml_to_tibbles <- function(xml_file_path,
   var_position <- function(n) {
     return(1 + (n - 1) * 25)
   }
-
   # Generate the row indices using var_position
   row_indices <- sapply(1:(num_var_calcdata), var_position)
   # Extract variable names
@@ -125,26 +94,19 @@ xml_to_tibbles <- function(xml_file_path,
   calcdata <- rbind(saved_calcdata_vars, stripped_calcdata)
   # Remove spaces
   calcdata$cell_data <- gsub(" ", "", calcdata$cell_data)
+  vec_calcdata <- calcdata$cell_data
+  num_rows_calcdata <- nrow(calcdata) / 6
 
   # Mean perfusion
   meanperfdata <- meanperfdata[-c(1),]
   meanperfdata$cell_data <- gsub(" ", "", meanperfdata$cell_data)
+  vec_meanperfdata <- meanperfdata$cell_data
+  num_rows_meanperf <- 5
 
   # ROI data
   roidata <- roidata[-c(1),]
   roidata$cell_data <- gsub(" ", "", roidata$cell_data)
-
-  # Extract the column as a vectors
-  vec_recinfodata <- recinfodata$cell_data
-  vec_calcdata <- calcdata$cell_data
-  vec_meanperfdata <- meanperfdata$cell_data
   vec_percentchangedata <- roidata$cell_data
-
-  # Define number of rows
-  num_rows_meanperf <- 5
-  num_rows_roidata <- 5
-  num_rows_recinfo <- 2
-  num_rows_calcdata <- nrow(calcdata) / 6
 
   # Convert the vector into a matrix with the specified number of columns, filling by row, convert back to tibble.
   all_vectors <- list(vec_recinfodata, vec_calcdata, vec_meanperfdata, vec_percentchangedata)
@@ -207,13 +169,19 @@ xml_to_tibbles <- function(xml_file_path,
       # Removing spaces from column names
       rename_with(.fn = ~str_replace_all(.x, " ", ""), .cols = everything()) %>%
       # Correctly apply text replacements within the first column
-      mutate(!!sym(first_col_name) := str_replace_all(!!sym(first_col_name), "ACH", "ACHsens")) %>%
       mutate(!!sym(first_col_name) := str_replace_all(!!sym(first_col_name), "REF|ref|Ref", "refsens")) %>%
-      mutate(!!sym(first_col_name) := str_replace_all(!!sym(first_col_name), "SNP", "SNPsens"))
-
-    return(recinfo_data)
-    return(calc_data)
-    return(meanperf_data)
-    return(roi_data)
+      mutate(!!sym(first_col_name) := str_replace_all(!!sym(first_col_name), "(Vila|vila|Rest|rest)", "rest")) %>%
+      mutate(across(first_col_name, ~ str_replace_all(.x, "\\|ACH", "|ACHsens"))) %>%
+      mutate(across(first_col_name, ~ str_replace_all(.x, "\\|SNP", "|SNPsens")))
   }
+
+  list2env(all_tibbles, envir = .GlobalEnv)
+
+  meanperf_data <- meanperf_data %>%
+    mutate(across(PU, ~ str_replace_all(.x, "ACH", "ACHsens"))) %>%
+    mutate(across(PU, ~ str_replace_all(.x, "SNP", "SNPsens")))
+
+  roi_data <- roi_data %>%
+    mutate(across(Change, ~ str_replace_all(.x, "ACH", "ACHsens"))) %>%
+    mutate(across(Change, ~ str_replace_all(.x, "SNP", "SNPsens")))
 }
