@@ -2,10 +2,9 @@
 #'
 #' @param folder_path takes path to folder containing xml files
 #'
-#' @return
+#' @return returns a tibble of all data in folder
 #' @export
 #'
-#' @examples
 process_xml_folder <- function(folder_path) {
   # Get a list of all XML files in the folder
   xml_files <- list.files(folder_path, pattern = "\\.xml$", full.names = TRUE)
