@@ -1,6 +1,6 @@
-#' xml_to_tibbles
+#' turning XML to seperate tibbles
 #'
-#' @description *Applicable to microvasc research group, Danderyds Sjukhus workflow*. Takes a PimSOFT report in XML format and generates clean data frames in tibble format. One data frame per specified report category. Recinfo, calc, meanperf, roi.
+#' @description *Applicable to microvasc research group, Danderyds Sjukhus workflow*. Takes a PimSOFT report in XML format and generates clean data frames in tibble format. One data frame per specified report category. Recinfo, calc, meanperf, roi mandatory.
 #'
 #' @param xml_file_path file path to xml file in working directory
 #'
@@ -12,7 +12,7 @@
 #' @import lubridate
 #' @import xml2
 #'
-#' @return returns clean tibbles of data for each specified report category.
+#' @return returns 4 tibbles in a list with clean data.
 #' @export
 #'
 xml_to_tibbles <- function(xml_file_path) {
@@ -184,4 +184,6 @@ xml_to_tibbles <- function(xml_file_path) {
   roi_data <- roi_data %>%
     mutate(across(Change, ~ str_replace_all(.x, "ACH", "ACHsens"))) %>%
     mutate(across(Change, ~ str_replace_all(.x, "SNP", "SNPsens")))
+
+  return(list(recinfo_data = recinfo_data, calc_data = calc_data, meanperf_data = meanperf_data, roi_data = roi_data))
 }
