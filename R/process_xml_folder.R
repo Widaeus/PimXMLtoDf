@@ -13,7 +13,7 @@ process_xml_folder <- function(folder_path) {
   combined_tibbles_list <- list()
 
   # Loop through each XML file
-  for(xml_file in xml_files) {
+  for (xml_file in xml_files) {
     # Generate the four tibbles from the XML
     tibbles_list <- xml_to_tibbles(xml_file) # Ensure xml_to_tibbles returns a list of tibbles
 
@@ -28,4 +28,17 @@ process_xml_folder <- function(folder_path) {
   final_combined_tibble <- bind_rows(combined_tibbles_list)
 
   return(final_combined_tibble)
+}
+
+#' process xml file to one tibble data frame
+#'
+#' @param xml_path takes path to folder containing xml files
+#'
+#' @return returns a tibble of onw row
+#' @export
+#'
+process_xml_single <- function(xml_path) {
+singlerow_df <- tibbles_to_singlerow(xml_to_tibbles(xml_path))
+
+  return(singlerow_df)
 }
