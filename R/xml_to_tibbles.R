@@ -107,6 +107,7 @@ xml_to_tibbles <- function(xml_file_path) {
   roidata <- roidata[-c(1),]
   roidata$cell_data <- gsub(" ", "", roidata$cell_data)
   vec_percentchangedata <- roidata$cell_data
+  num_rows_roidata <- 5
 
   # Convert the vector into a matrix with the specified number of columns, filling by row, convert back to tibble.
   all_vectors <- list(vec_recinfodata, vec_calcdata, vec_meanperfdata, vec_percentchangedata)
@@ -160,21 +161,21 @@ xml_to_tibbles <- function(xml_file_path) {
     first_col_name <- names(all_tibbles[[i]])[1]  # Get the name of the first column
 
     all_tibbles[[i]] <- all_tibbles[[i]] %>%
-      rename_with(.fn = ~str_replace_all(.x, "^(Vila|vila|Rest|rest)$", "rest"),
-                  .cols = matches("^(Vila|vila|Rest|rest)$")) %>%
       rename_with(.fn = ~ifelse(str_detect(., regex("AC|ac", ignore_case = TRUE)), "ACHmax", .),
                   .cols = everything()) %>%
       rename_with(.fn = ~ifelse(str_detect(., regex("SN|sn", ignore_case = TRUE)), "SNPmax", .),
                   .cols = everything()) %>%
-      # Removing spaces from column names
-      rename_with(.fn = ~str_replace_all(.x, " ", ""), .cols = everything()) %>%
-      # Correctly apply text replacements within the first column
-      mutate(!!sym(first_col_name) := str_replace_all(!!sym(first_col_name), "REF|ref|Ref", "refsens")) %>%
-      mutate(!!sym(first_col_name) := str_replace_all(!!sym(first_col_name), "(Vila|vila|Rest|rest)", "rest")) %>%
-      mutate(across(first_col_name, ~ str_replace_all(.x, "\\|ACH", "|ACHsens"))) %>%
-      mutate(across(first_col_name, ~ str_replace_all(.x, "\\|SNP", "|SNPsens")))
+      rename_with(~ str_replace_all(.x, regex("vila|rest", ignore_case = TRUE), "rest")) %>%
+      rename_with(~ str_replace_all(.x, regex("ref", ignore_case = TRUE), "ref")) %>%
+      mutate(across(all_of(first_col_name), ~ str_replace_all(.x, regex("vila|rest", ignore_case = TRUE), "rest"))) %>%
+      mutate(across(all_of(first_col_name), ~ str_replace(.x, "ACNmax", "ACHmax"))) %>%
+      mutate(across(all_of(first_col_name), ~ str_replace_all(.x, " ", ""))) %>%
+      mutate(across(all_of(first_col_name), ~ str_replace_all(.x, regex("REF|Ref|ref", ignore_case = TRUE), "refsens"))) %>%
+      mutate(across(all_of(first_col_name), ~ str_replace_all(.x, "\\|ACH", "|ACHsens"))) %>%
+      mutate(across(all_of(first_col_name), ~ str_replace_all(.x, "\\|SNP", "|SNPsens"))) %>%
+      mutate(across(all_of(first_col_name), ~ str_replace(.x, ".*?(SNPmax)", "SNPmax"))) %>%
+      mutate(across(all_of(first_col_name), ~ str_replace(.x, ".*?(ACHmax)", "ACHmax")))
   }
-
   list2env(all_tibbles, envir = .GlobalEnv)
 
   meanperf_data <- meanperf_data %>%
