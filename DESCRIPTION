@@ -1,6 +1,6 @@
-Package: PimXMLtoDf
+Package: pimxml
 Type: Package
-Title: Conversion of PimSOFT generated XML files to usable R dataframe
+Title: Conversion of PimSOFT generated XML files to usable R dataframes.
 Version: 0.1.1
 Author: person(
   "Jacob", "Widaeus",
@@ -10,8 +10,6 @@ Author: person(
   )
 Description: This package is intended for importing multiple XML files as single row observations into a dataframe.
         It can also be used on a folder of XML files. It is based on the package xml2 and tidyvserse based packages.
-        It includes two functions "xml_to_singlerow" and "singlerow_df_compile".
-        "xml_to_singlerow" takes a xml file path and generates a single row tibble df. "singlerow_df_compile" takes a file path to a folder of XML files and compiles all of them into a data frame.
 Encoding: UTF-8
 LazyData: true
 Depends:
@@ -22,8 +20,6 @@ Depends:
   tibble,
   lubridate,
   xml2
-Suggests: testthat (>= 3.0.0)
-Config/testthat/edition: 3
 License: MIT + file LICENSE
 Maintainer: [Jacob Widaeus] <jacob@widaeus.com>
 RoxygenNote: 7.3.1
