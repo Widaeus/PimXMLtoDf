@@ -21,5 +21,6 @@ Depends:
   lubridate,
   xml2
 License: MIT + file LICENSE
+Roxygen: list(markdown = TRUE)
 Maintainer: [Jacob Widaeus] <jacob@widaeus.com>
 RoxygenNote: 7.3.1
