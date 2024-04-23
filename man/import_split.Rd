@@ -7,7 +7,7 @@
 import_split(xml_file_path)
 }
 \arguments{
-\item{xml_file_path}{file path to a single xml file generated på PimSOFT. Mandatory recinfo, calc, meanperf and roi info.}
+\item{xml_file_path}{file path to a single xml file generated with PimSOFT.}
 }
 \value{
 returns a list of data frames. One long column of raw data.

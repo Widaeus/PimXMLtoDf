@@ -7,7 +7,7 @@
 singlerow(compact_tibble)
 }
 \arguments{
-\item{compact_tibble}{takes a list of compact tibbles from "compact" function.}
+\item{compact_tibble}{takes a list of compact tibbles.}
 }
 \value{
 returns a single tibble of one row per XML input file.

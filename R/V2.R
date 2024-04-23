@@ -1,6 +1,6 @@
 #' Importing and splitting
 #'
-#' @param xml_file_path file path to a single xml file generated på PimSOFT. Mandatory recinfo, calc, meanperf and roi info.
+#' @param xml_file_path file path to a single xml file generated with PimSOFT.
 #'
 #' @return returns a list of data frames. One long column of raw data.
 #' @export
@@ -46,7 +46,10 @@ import_split <- function(xml_file_path) {
   end_row_perf <- nrow(data)
   roidata <- data[start_row_perf:end_row_perf, ]
 
-  return(list(recinfo = recinfodata, calc = calcdata, meanperf = meanperfdata, roi = roidata))
+  return(list(
+    recinfo = recinfodata, calc = calcdata, meanperf = meanperfdata,
+    roi = roidata
+  ))
 }
 
 #' Tibble converting
@@ -64,7 +67,7 @@ tibbleconvert <- function(list) {
 
   # Counting how many rows calcdata has letters (variables)
   count_rows_with_letters <- 0
-  for (i in 1:nrow(calcdata)) {
+  for (i in seq_len(nrow(calcdata))) {
     # Check if the current row contains any letter
     if (grepl("[a-zA-Z]", calcdata[i, 1])) {
       # Increment the counter if a letter is found
@@ -93,7 +96,10 @@ tibbleconvert <- function(list) {
   # Generate the row indices using var_position
   row_indices <- sapply(1:(num_var_calcdata), var_position)
   # Extract variable names
-  var_calcdata <- data.frame(cell_data = stripped_calcdata[row_indices, "cell_data"])
+  var_calcdata <- data.frame(
+    cell_data =
+      stripped_calcdata[row_indices, "cell_data"]
+  )
   # Now remove all rows containing variable names
   stripped_calcdata <- stripped_calcdata[-c(row_indices), ]
   # Recombine the saved variables
@@ -116,13 +122,28 @@ tibbleconvert <- function(list) {
   vec_percentchangedata <- roidata$cell_data
   num_rows_roidata <- 5
 
-  # Convert the vector into a matrix with the specified number of columns, filling by row, convert back to tibble.
-  all_vectors <- list(vec_recinfodata, vec_calcdata, vec_meanperfdata, vec_percentchangedata)
-  all_num_rows <- list(num_rows_recinfo, num_rows_calcdata, num_rows_meanperf, num_rows_roidata)
+  # Convert the vector into a matrix with the specified number of columns.
+  # Filling by row, convert back to tibble.
+  all_vectors <- list(
+    vec_recinfodata,
+    vec_calcdata,
+    vec_meanperfdata,
+    vec_percentchangedata
+  )
+
+  all_num_rows <- list(
+    num_rows_recinfo,
+    num_rows_calcdata,
+    num_rows_meanperf,
+    num_rows_roidata
+  )
+
   all_names <- c("recinfo_", "calc_", "meanperf_", "roi_")
 
-  for (i in 1:length(all_vectors)) {
-    matrix_data <- matrix(all_vectors[[i]], nrow = all_num_rows[[i]], byrow = TRUE)
+  for (i in seq_along(all_vectors)) {
+    matrix_data <- matrix(all_vectors[[i]],
+                          nrow = all_num_rows[[i]],
+                          byrow = TRUE)
     data <- as_tibble(matrix_data)
     assign(paste0(all_names[i], "data"), data, envir = .GlobalEnv)
   }
@@ -155,7 +176,10 @@ cleantibble <- function(tibble_list) {
   tibble_list$num_var <- NULL
 
   for (i in 2:length(tibble_list)) {
-    tibble_list[[i]][[1]] <- gsub("[0-9]|[[:punct:]]", "", as.character(tibble_list[[i]][[1]]))
+    tibble_list[[i]][[1]] <- gsub(
+      "[0-9]|[[:punct:]]", "",
+      as.character(tibble_list[[i]][[1]])
+    )
   }
 
   # Make first row labels and then remove it.
@@ -170,6 +194,7 @@ cleantibble <- function(tibble_list) {
   meanperf_tibble <- tibble_list$meanperf
   roi_tibble <- tibble_list$roi
 
+
   # Removing spaces in var_calcdata
   var_calcdata[, 1] <- gsub(" ", "", var_calcdata[, 1])
 
@@ -180,9 +205,11 @@ cleantibble <- function(tibble_list) {
 
     # Loop through each individual row in the block
     for (j in start_index:end_index) {
-      # Check if j is within the bounds of calc_tibble
       if (j <= nrow(calc_tibble)) {
-        calc_tibble[j, 1] <- paste(var_calcdata[i, 1], calc_tibble[j, 1], sep = "|")
+        calc_tibble[j, 1] <- paste(var_calcdata[i, 1],
+          calc_tibble[j, 1],
+          sep = "|"
+        )
       }
     }
   }
@@ -192,29 +219,122 @@ cleantibble <- function(tibble_list) {
   list_names <- c("recinfo_data", "calc_data", "meanperf_data", "roi_data")
   names(all_tibbles) <- list_names
 
+
   # Renaming
   for (i in 2:length(all_tibbles)) {
-    first_col_name <- names(all_tibbles[[i]])[1] # Get the name of the first column
-
+    # Get the name of the first column
+    first_col_name <- names(all_tibbles[[i]])[1]
     all_tibbles[[i]] <- all_tibbles[[i]] %>%
       rename_with(
-        .fn = ~ ifelse(str_detect(., regex("ac", ignore_case = TRUE)), "ACHmax", .),
+        .fn = ~ ifelse(str_detect(
+          .,
+          regex("ac",
+            ignore_case = TRUE
+          )
+        ),
+        "ACHmax",
+        .
+        ),
         .cols = everything()
       ) %>%
       rename_with(
-        .fn = ~ ifelse(str_detect(., regex("sn", ignore_case = TRUE)), "SNPmax", .),
+        .fn = ~ ifelse(str_detect(
+          .,
+          regex("sn", ignore_case = TRUE)
+        ),
+        "SNPmax",
+        .
+        ),
         .cols = everything()
       ) %>%
-      rename_with(~ str_replace_all(.x, regex("vila|rest", ignore_case = TRUE), "rest")) %>%
-      rename_with(~ str_replace_all(.x, regex("ref", ignore_case = TRUE), "ref")) %>%
-      mutate(across(all_of(first_col_name), ~ str_replace_all(.x, regex("vila|rest", ignore_case = TRUE), "rest"))) %>%
-      mutate(across(all_of(first_col_name), ~ str_replace(.x, "ACNmax", "ACHmax"))) %>%
-      mutate(across(all_of(first_col_name), ~ str_replace_all(.x, " ", ""))) %>%
-      mutate(across(all_of(first_col_name), ~ str_replace_all(.x, regex("ref", ignore_case = TRUE), "refsens"))) %>%
-      mutate(across(all_of(first_col_name), ~ str_replace_all(.x, "\\|ACH", "|ACHsens"))) %>%
-      mutate(across(all_of(first_col_name), ~ str_replace_all(.x, "\\|SNP", "|SNPsens"))) %>%
-      mutate(across(all_of(first_col_name), ~ str_replace(.x, ".*?(SNPmax)", "SNPmax"))) %>%
-      mutate(across(all_of(first_col_name), ~ str_replace(.x, ".*?(ACHmax)", "ACHmax")))
+      rename_with(~ str_replace_all(
+        .x,
+        regex("vila|rest",
+          ignore_case = TRUE
+        ),
+        "rest"
+      )) %>%
+      rename_with(~ str_replace_all(
+        .x,
+        regex("ref", ignore_case = TRUE),
+        "ref"
+      )) %>%
+      mutate(
+        across(
+          all_of(first_col_name), ~ str_replace_all(
+            .x,
+            regex("vila|rest",
+              ignore_case = TRUE
+            ),
+            "rest"
+          )
+        )
+      ) %>%
+      mutate(
+        across(
+          all_of(first_col_name), ~ str_replace(
+            .x,
+            "ACNmax",
+            "ACHmax"
+          )
+        )
+      ) %>%
+      mutate(
+        across(
+          all_of(first_col_name), ~ str_replace_all(
+            .x,
+            " ",
+            ""
+          )
+        )
+      ) %>%
+      mutate(
+        across(
+          all_of(first_col_name), ~ str_replace_all(
+            .x,
+            regex("ref",
+              ignore_case = TRUE
+            ),
+            "refsens"
+          )
+        )
+      ) %>%
+      mutate(
+        across(
+          all_of(first_col_name), ~ str_replace_all(
+            .x,
+            "\\|ACH",
+            "|ACHsens"
+          )
+        )
+      ) %>%
+      mutate(
+        across(
+          all_of(first_col_name), ~ str_replace_all(
+            .x,
+            "\\|SNP",
+            "|SNPsens"
+          )
+        )
+      ) %>%
+      mutate(
+        across(
+          all_of(first_col_name), ~ str_replace(
+            .x,
+            ".*?(SNPmax)",
+            "SNPmax"
+          )
+        )
+      ) %>%
+      mutate(
+        across(
+          all_of(first_col_name), ~ str_replace(
+            .x,
+            ".*?(ACHmax)",
+            "ACHmax"
+          )
+        )
+      )
   }
 
   recinfo_tibble <- all_tibbles$recinfo_data
@@ -236,12 +356,17 @@ cleantibble <- function(tibble_list) {
     pivot_wider(names_from = 2, values_from = 1) %>%
     mutate(datetime = ymd_hms(datetime))
 
-  return(list(recinfo = recinfo_tibble, calc = calc_tibble, meanperf = meanperf_tibble, roi = roi_tibble))
+  return(list(
+    recinfo = recinfo_tibble,
+    calc = calc_tibble,
+    meanperf = meanperf_tibble,
+    roi = roi_tibble
+  ))
 }
 
 #' Selection of variables
 #'
-#' @param clean_tibble takes a list of clean tibbles from "cleantibble" function.
+#' @param clean_tibble takes a list of clean tibbles.
 #'
 #' @return returns a a list of tibbles.
 #' @export
@@ -275,7 +400,7 @@ compact <- function(clean_tibble) {
 
 #' Transforms to singlerow
 #'
-#' @param compact_tibble takes a list of compact tibbles from "compact" function.
+#' @param compact_tibble takes a list of compact tibbles.
 #'
 #' @return returns a single tibble of one row per XML input file.
 #' @export
@@ -301,7 +426,12 @@ singlerow <- function(compact_tibble) {
     summarize(across(everything(), ~ .[!is.na(.)][1])) %>%
     rename_with(~ paste0("roi_", .), .cols = everything())
 
-  combined_tibble <- bind_cols(recinfo_start, calc_start, meanperf_start, roi_start)
+  combined_tibble <- bind_cols(
+    recinfo_start,
+    calc_start,
+    meanperf_start,
+    roi_start
+  )
 
   return(combined_tibble)
 }
@@ -325,7 +455,7 @@ xml_to_df <- function(xml_file_path) {
 
 #' Entire transform, folder edition
 #'
-#' @param folder_path takes a folder file path. Transforms all of the XML files there.
+#' @param folder_path takes a folder file path. Transforms all of the XML files.
 #'
 #' @return returns a single tibble of one row per XML input file in folder.
 #' @export
@@ -339,7 +469,8 @@ folder_to_df <- function(folder_path) {
     # Generate the four tibbles from the XML
     # Combine the four tibbles into a single row
 
-    tibbles_list <- xml_to_df(xml_file) # Ensure xml_to_tibbles returns a list of tibbles
+    # Ensure xml_to_tibbles returns a list of tibbles
+    tibbles_list <- xml_to_df(xml_file)
 
     # Store the combined tibble in the list
     combined_tibbles_list[[length(combined_tibbles_list) + 1]] <- tibbles_list

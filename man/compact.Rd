@@ -7,7 +7,7 @@
 compact(clean_tibble)
 }
 \arguments{
-\item{clean_tibble}{takes a list of clean tibbles from "cleantibble" function.}
+\item{clean_tibble}{takes a list of clean tibbles.}
 }
 \value{
 returns a a list of tibbles.

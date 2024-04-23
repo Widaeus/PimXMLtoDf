@@ -7,7 +7,7 @@
 folder_to_df(folder_path)
 }
 \arguments{
-\item{folder_path}{takes a folder file path. Transforms all of the XML files there.}
+\item{folder_path}{takes a folder file path. Transforms all of the XML files.}
 }
 \value{
 returns a single tibble of one row per XML input file in folder.
