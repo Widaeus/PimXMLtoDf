@@ -6,47 +6,47 @@
 #' @export
 #'
 import_split <- function(xml_file_path) {
-ns <- c(ss = "urn:schemas-microsoft-com:office:spreadsheet")
+  ns <- c(ss = "urn:schemas-microsoft-com:office:spreadsheet")
 
-# Read the XML file
-xml_data <- read_xml(xml_file_path)
+  # Read the XML file
+  xml_data <- read_xml(xml_file_path)
 
-# Find all rows in the document
-rows <- xml_find_all(xml_data, ".//ss:Row", ns = ns)
+  # Find all rows in the document
+  rows <- xml_find_all(xml_data, ".//ss:Row", ns = ns)
 
-# Extract data from each row
-data <- map_df(rows, ~{
-  cells <- xml_find_all(.x, ".//ss:Cell/ss:Data", ns = ns)
-  cell_data <- map_chr(cells, xml_text)
-  tibble(cell_data)
-})
+  # Extract data from each row
+  data <- map_df(rows, ~{
+    cells <- xml_find_all(.x, ".//ss:Cell/ss:Data", ns = ns)
+    cell_data <- map_chr(cells, xml_text)
+    tibble(cell_data)
+  })
 
-# Remove empty strings
-data <- data %>%
-  filter(!if_any(everything(), ~ .x == ""))
+  # Remove empty strings
+  data <- data %>%
+   filter(!if_any(everything(), ~ .x == ""))
 
-# Split up data to make it generic
-# Split for rec info
-start_row_rec <- which(data$cell_data == "Recording info")
-end_row_rec <- (which(data$cell_data == "Image Count") + 3)
-recinfodata <- data[start_row_rec:end_row_rec,]
+  # Split up data to make it generic
+  # Split for rec info
+  start_row_rec <- which(data$cell_data == "Recording info")
+  end_row_rec <- (which(data$cell_data == "Image Count") + 3)
+  recinfodata <- data[start_row_rec:end_row_rec,]
 
-# Split for calculation data
-start_row_perf <- which(data$cell_data == "Calculations")
-end_row_perf <- (which(data$cell_data == "Mean Perfusion") - 1)
-calcdata <- data[start_row_perf:end_row_perf,]
+  # Split for calculation data
+  start_row_perf <- which(data$cell_data == "Calculations")
+  end_row_perf <- (which(data$cell_data == "Mean Perfusion") - 1)
+  calcdata <- data[start_row_perf:end_row_perf,]
 
-# Split for mean perfusion data
-start_row_perf <- which(data$cell_data == "Mean Perfusion")
-end_row_perf <- (which(data$cell_data == "Percent Change Per ROI") - 1)
-meanperfdata <- data[start_row_perf:end_row_perf,]
+  # Split for mean perfusion data
+  start_row_perf <- which(data$cell_data == "Mean Perfusion")
+  end_row_perf <- (which(data$cell_data == "Percent Change Per ROI") - 1)
+  meanperfdata <- data[start_row_perf:end_row_perf,]
 
-#Split for ROI data
-start_row_perf <- which(data$cell_data == "Percent Change Per ROI")
-end_row_perf <- nrow(data)
-roidata <- data[start_row_perf:end_row_perf,]
+  # Split for ROI data
+  start_row_perf <- which(data$cell_data == "Percent Change Per ROI")
+  end_row_perf <- nrow(data)
+  roidata <- data[start_row_perf:end_row_perf,]
 
-return(list(recinfo = recinfodata, calc = calcdata, meanperf = meanperfdata, roi = roidata))
+  return(list(recinfo = recinfodata, calc = calcdata, meanperf = meanperfdata, roi = roidata))
 }
 
 #' Tibble converting
@@ -58,82 +58,83 @@ return(list(recinfo = recinfodata, calc = calcdata, meanperf = meanperfdata, roi
 #'
 tibbleconvert <- function(list) {
 
-recinfodata <- list$recinfo
-calcdata <- list$calc
-meanperfdata <- list$meanperf
-roidata <- list$roi
+  recinfodata <- list$recinfo
+  calcdata <- list$calc
+  meanperfdata <- list$meanperf
+  roidata <- list$roi
 
-# Counting how many rows calcdata has letters (variables)
-count_rows_with_letters <- 0
-for (i in 1:nrow(calcdata)) {
-  # Check if the current row contains any letter
-  if (grepl("[a-zA-Z]", calcdata[i, 1])) {
-    # Increment the counter if a letter is found
-    count_rows_with_letters <- count_rows_with_letters + 1
+  # Counting how many rows calcdata has letters (variables)
+  count_rows_with_letters <- 0
+  for (i in 1:nrow(calcdata)) {
+    # Check if the current row contains any letter
+    if (grepl("[a-zA-Z]", calcdata[i, 1])) {
+     # Increment the counter if a letter is found
+     count_rows_with_letters <- count_rows_with_letters + 1
+   }
   }
-}
-# Starting variables are 6, divide by 5 to get nr of variables in calcdata
-num_var_calcdata <- (count_rows_with_letters - 6) / 5
 
-# Specific cleaning
-# Recording info
-recinfodata <- recinfodata[-c(1:2, 4:6, 8:13),]
-recinfodata$cell_data <- gsub(" ", "", recinfodata$cell_data)
-vec_recinfodata <- recinfodata$cell_data
-num_rows_recinfo <- 2
+  # Starting variables are 6, divide by 5 to get nr of variables in calcdata
+  num_var_calcdata <- (count_rows_with_letters - 6) / 5
 
-
-# Calculations
-saved_calcdata_vars <- calcdata[c(1:6),]
-stripped_calcdata <- calcdata[-c(1:6),]
-# Function for variable position
-var_position <- function(n) {
-  return(1 + (n - 1) * 25)
-}
-# Generate the row indices using var_position
-row_indices <- sapply(1:(num_var_calcdata), var_position)
-# Extract variable names
-var_calcdata <- data.frame(cell_data = stripped_calcdata[row_indices, "cell_data"])
-# Now remove all rows containing variable names
-stripped_calcdata <- stripped_calcdata[-c(row_indices),]
-# Recombine the saved variables
-calcdata <- rbind(saved_calcdata_vars, stripped_calcdata)
-# Remove spaces
-calcdata$cell_data <- gsub(" ", "", calcdata$cell_data)
-vec_calcdata <- calcdata$cell_data
-num_rows_calcdata <- nrow(calcdata) / 6
+  # Specific cleaning
+  # Recording info
+  recinfodata <- recinfodata[-c(1:2, 4:6, 8:13),]
+  recinfodata$cell_data <- gsub(" ", "", recinfodata$cell_data)
+  vec_recinfodata <- recinfodata$cell_data
+  num_rows_recinfo <- 2
 
 
-# Mean perfusion
-meanperfdata <- meanperfdata[-c(1),]
-meanperfdata$cell_data <- gsub(" ", "", meanperfdata$cell_data)
-vec_meanperfdata <- meanperfdata$cell_data
-num_rows_meanperf <- 5
-
-# ROI data
-roidata <- roidata[-c(1),]
-roidata$cell_data <- gsub(" ", "", roidata$cell_data)
-vec_percentchangedata <- roidata$cell_data
-num_rows_roidata <- 5
-
-# Convert the vector into a matrix with the specified number of columns, filling by row, convert back to tibble.
-all_vectors <- list(vec_recinfodata, vec_calcdata, vec_meanperfdata, vec_percentchangedata)
-all_num_rows <- list(num_rows_recinfo, num_rows_calcdata, num_rows_meanperf, num_rows_roidata)
-all_names <- c("recinfo_", "calc_", "meanperf_", "roi_")
-
-for (i in 1:length(all_vectors)) {
-  matrix_data <- matrix(all_vectors[[i]], nrow = all_num_rows[[i]], byrow = TRUE)
-  data <- as_tibble(matrix_data)
-  assign(paste0(all_names[i], "data"), data, envir = .GlobalEnv)
-}
+  # Calculations
+  saved_calcdata_vars <- calcdata[c(1:6),]
+  stripped_calcdata <- calcdata[-c(1:6),]
+  # Function for variable position
+  var_position <- function(n) {
+    return(1 + (n - 1) * 25)
+  }
+  # Generate the row indices using var_position
+  row_indices <- sapply(1:(num_var_calcdata), var_position)
+  # Extract variable names
+  var_calcdata <- data.frame(cell_data = stripped_calcdata[row_indices, "cell_data"])
+  # Now remove all rows containing variable names
+  stripped_calcdata <- stripped_calcdata[-c(row_indices),]
+  # Recombine the saved variables
+  calcdata <- rbind(saved_calcdata_vars, stripped_calcdata)
+  # Remove spaces
+  calcdata$cell_data <- gsub(" ", "", calcdata$cell_data)
+  vec_calcdata <- calcdata$cell_data
+  num_rows_calcdata <- nrow(calcdata) / 6
 
 
-return(list(recinfo_tibble = recinfo_data,
-            calc_tibble = calc_data,
-            meanperf_tibble = meanperf_data,
-            roi_tibble = roi_data,
-            var_calc = var_calcdata,
-            num_var = num_var_calcdata))
+  # Mean perfusion
+  meanperfdata <- meanperfdata[-c(1),]
+  meanperfdata$cell_data <- gsub(" ", "", meanperfdata$cell_data)
+  vec_meanperfdata <- meanperfdata$cell_data
+  num_rows_meanperf <- 5
+
+  # ROI data
+  roidata <- roidata[-c(1),]
+  roidata$cell_data <- gsub(" ", "", roidata$cell_data)
+  vec_percentchangedata <- roidata$cell_data
+  num_rows_roidata <- 5
+
+  # Convert the vector into a matrix with the specified number of columns, filling by row, convert back to tibble.
+  all_vectors <- list(vec_recinfodata, vec_calcdata, vec_meanperfdata, vec_percentchangedata)
+  all_num_rows <- list(num_rows_recinfo, num_rows_calcdata, num_rows_meanperf, num_rows_roidata)
+  all_names <- c("recinfo_", "calc_", "meanperf_", "roi_")
+
+  for (i in 1:length(all_vectors)) {
+    matrix_data <- matrix(all_vectors[[i]], nrow = all_num_rows[[i]], byrow = TRUE)
+    data <- as_tibble(matrix_data)
+    assign(paste0(all_names[i], "data"), data, envir = .GlobalEnv)
+  }
+
+
+  return(list(recinfo_tibble = recinfo_data,
+              calc_tibble = calc_data,
+              meanperf_tibble = meanperf_data,
+              roi_tibble = roi_data,
+              var_calc = var_calcdata,
+              num_var = num_var_calcdata))
 }
 
 #' Tibble cleaning
@@ -154,8 +155,8 @@ cleantibble <- function(tibble_list) {
   tibble_list$num_var <- NULL
 
   for (i in 2:length(tibble_list)) {
-  tibble_list[[i]][[1]] <- gsub("[0-9]|[[:punct:]]", "", as.character(tibble_list[[i]][[1]]))
-}
+    tibble_list[[i]][[1]] <- gsub("[0-9]|[[:punct:]]", "", as.character(tibble_list[[i]][[1]]))
+  }
 
   # Make first row labels and then remove it.
   for (i in 2:length(tibble_list)) {
@@ -232,7 +233,7 @@ cleantibble <- function(tibble_list) {
     mutate(datetime = ymd_hms(datetime))
 
   return(list(recinfo = recinfo_tibble, calc = calc_tibble, meanperf = meanperf_tibble, roi = roi_tibble))
-  }
+}
 
 #' Selection of variables
 #'
@@ -259,7 +260,7 @@ compact <- function(clean_tibble) {
 
   roi_start <- roi_start %>%
     select(1, matches("rest|ACHmax|SNPmax")) %>%
-  filter(!grepl("Entireimg", Change))
+    filter(!grepl("Entireimg", Change))
 
   return(list(recinfo = recinfo_start,
               calc = calc_start,
@@ -327,9 +328,9 @@ xml_to_df <- function(xml_file_path) {
 #' @export
 #'
 folder_to_df <- function(folder_path) {
-
-    xml_files <- list.files(folder_path, pattern = "\\.xml$", full.names = TRUE)
-    combined_tibbles_list <- list()
+  
+  xml_files <- list.files(folder_path, pattern = "\\.xml$", full.names = TRUE)
+  combined_tibbles_list <- list()
 
   # Loop through each XML file
   for (xml_file in xml_files) {
