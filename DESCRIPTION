@@ -1,6 +1,6 @@
 Package: pimimport
 Type: Package
-Title: Conversion of PimSOFT generated XML files to usable R dataframes.
+Title: Conversion of PimSOFT generated files.
 Version: 0.1.1
 Author: person(
   "Jacob", "Widaeus",
@@ -8,8 +8,7 @@ Author: person(
   role = c("aut", "cre"),
   comment = c(ORCID = "0000-0002-3148-2829")
   )
-Description: This package is intended for importing multiple XML files as single row observations into a dataframe.
-        It can also be used on a folder of XML files. It is based on the package xml2 and tidyvserse based packages.
+Description: This package is intended to import data from PimSOFT as usable data frames. It takes XML generated files and raw graph data.
 Encoding: UTF-8
 LazyData: true
 Depends:
