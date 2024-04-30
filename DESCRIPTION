@@ -1,4 +1,4 @@
-Package: pimxml
+Package: pimimport
 Type: Package
 Title: Conversion of PimSOFT generated XML files to usable R dataframes.
 Version: 0.1.1
